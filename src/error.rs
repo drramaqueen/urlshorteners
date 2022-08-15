@@ -15,9 +15,9 @@ impl std::error::Error for Error {
     fn description(&self) -> &str {
         use self::Error::*;
         match &*self {
-            BadUrl(_s) => "Url {_s} is not valid",
-            ResponseError(_s) => "Got response error: {_s}",
-            ExpandError(_s) => "Got expand error: {_s}",
+            BadUrl(s) => "Url {s} is not valid",
+            ResponseError(s) => "Got response error: {s}",
+            ExpandError(s) => "Got expand error: {s}",
         }
     }
 }
@@ -27,9 +27,9 @@ impl Display for Error {
         use self::Error::*;
 
         match &*self {
-            BadUrl(_s) => write!(f, "Url {_s} is not valid"),
-            ResponseError(_s) => write!(f, "Got response error: {_s}"),
-            ExpandError(_s) => write!(f, "Got expand error: {_s}"),
+            BadUrl(s) => write!(f, "Url {} is not valid", s),
+            ResponseError(s) => write!(f, "Got response error: {}", s),
+            ExpandError(s) => write!(f, "Got expand error: {}", s),
         }
     }
 }
