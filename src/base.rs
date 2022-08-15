@@ -39,25 +39,22 @@ pub trait BaseShortener {
     }
 
     fn clean_url(&self, url: Vec<u8>) -> Result<Vec<u8>> {
-        let str_from_url = std::str::from_utf8(&url);
-        let str_from_url = match str_from_url {
+        let str_from_url = match std::str::from_utf8(&url) {
             Ok(s) => s,
             Err(e) => return Err(Error::BadUrl(e.to_string())),
         };
-
+        let mut new_url: Vec<u8> = vec![];
         if !url.starts_with(b"http://") && !url.starts_with(b"https://") {
-            let url = "http://".to_string() + str_from_url;
-            println!("{}", url);
+            new_url = ("http://".to_string() + str_from_url).as_bytes().to_vec();
+        } else {
+            new_url = str_from_url.as_bytes().to_vec();
         }
-
-        let url = match Url::parse("https://example.net") {
-            Ok(_) => url,
+        let new_url = match Url::parse(std::str::from_utf8(&new_url).unwrap()) {
+            Ok(_) => new_url,
             Err(e) => return Err(Error::BadUrl(e.to_string())),
         };
 
-        // println!("{}", url_re);
-
-        Ok(url)
+        Ok(new_url)
     }
 }
 

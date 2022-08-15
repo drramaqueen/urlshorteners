@@ -12,7 +12,6 @@ mod tests {
     use std::collections::BTreeMap;
 
     #[tokio::test(flavor = "multi_thread")]
-
     async fn it_works() {
         let b = bitly::Shortener {
             timeout: 2,
