@@ -13,7 +13,7 @@ pub enum Error {
 impl std::error::Error for Error {
     fn description(&self) -> &str {
         use self::Error::*;
-        match *self {
+        match self {
             BadUrl(_) => "Url is not valid",
             ResponseError(_) => "Got response error",
             ExpandError(_) => "Got expand error",
@@ -25,7 +25,7 @@ impl Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::result::Result<(), fmt::Error> {
         use self::Error::*;
 
-        match &*self {
+        match self {
             BadUrl(s) => write!(f, "Url {} is not valid", s),
             ResponseError(s) => write!(f, "Got response error: {}", s),
             ExpandError(s) => write!(f, "Got expand error: {}", s),
