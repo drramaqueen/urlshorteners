@@ -13,7 +13,7 @@ pub enum Error {
 impl std::error::Error for Error {
     fn description(&self) -> &str {
         use self::Error::*;
-        match &*self {
+        match *self {
             BadUrl(_) => "Url is not valid",
             ResponseError(_) => "Got response error",
             ExpandError(_) => "Got expand error",
