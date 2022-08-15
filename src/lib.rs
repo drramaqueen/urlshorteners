@@ -22,7 +22,5 @@ mod tests {
         b.expand("https://bit.ly/TEST").await;
         b.clean_url("google.com".as_bytes().to_vec());
         b.clean_url("google".as_bytes().to_vec());
-
-        
     }
 }

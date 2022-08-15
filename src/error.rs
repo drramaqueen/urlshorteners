@@ -7,9 +7,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     BadUrl(String),
     ResponseError(String),
-    ExpandError(String)
+    ExpandError(String),
 }
-
 
 impl std::error::Error for Error {
     fn description(&self) -> &str {

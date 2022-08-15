@@ -1,9 +1,9 @@
 use crate::base::BaseShortener;
+use crate::error::Error;
+use crate::error::Result;
 use async_trait::async_trait;
 use std::collections::BTreeMap;
 use url::Url;
-use crate::error::Error;
-use crate::error::Result;
 
 pub struct Shortener {
     pub timeout: u32,

@@ -7,7 +7,6 @@ use url::Url;
 use crate::error::Error;
 use crate::error::Result;
 
-
 #[async_trait]
 pub trait BaseShortener {
     async fn get(&self, url: &str) -> Result<reqwest::Response> {
@@ -16,7 +15,7 @@ pub trait BaseShortener {
             Err(e) => {
                 println!("{}", e);
                 Err(Error::ResponseError(e.to_string()))
-            },
+            }
         }
     }
 
@@ -27,7 +26,7 @@ pub trait BaseShortener {
             Err(e) => {
                 println!("{}", e);
                 Err(Error::ResponseError(e.to_string()))
-            },
+            }
         }
     }
 
@@ -40,10 +39,9 @@ pub trait BaseShortener {
     }
 
     fn clean_url(&self, url: Vec<u8>) -> Result<Vec<u8>> {
-
         let str_from_url = std::str::from_utf8(&url);
         let str_from_url = match str_from_url {
-            Ok(s) => s, 
+            Ok(s) => s,
             Err(e) => return Err(Error::BadUrl(e.to_string())),
         };
 
@@ -51,7 +49,7 @@ pub trait BaseShortener {
             let url = "http://".to_string() + str_from_url;
             println!("{}", url);
         }
-        
+
         let url = match Url::parse("https://example.net") {
             Ok(_) => url,
             Err(e) => return Err(Error::BadUrl(e.to_string())),
@@ -62,8 +60,6 @@ pub trait BaseShortener {
         Ok(url)
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {
@@ -82,7 +78,5 @@ mod tests {
         };
         let url = b.expand("https://bit.ly/TEST").await.unwrap();
         assert_eq!(url.as_str(), "https://www.autosouk.com/News/templates/CarReviewPricePhotoArticlesDubai.Aspx?articleid=50&zoneid=3");
-
-        
     }
 }
