@@ -1,12 +1,12 @@
 on: [push, pull_request]
 
 name: CI
+environment: env
 
 jobs:
   check:
     name: Check
     runs-on: ubuntu-latest
-    environment: env
     strategy:
       matrix:
         rust:
