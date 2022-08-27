@@ -45,7 +45,7 @@ struct Shorten {
 #[async_trait]
 impl BaseShortener for Shortener {
     async fn expand(&self, url: &str) -> Result<Url> {
-        let url = self.clean_url(url.as_bytes().to_vec()).unwrap_or(vec![]);
+        let url = self.clean_url(url.as_bytes().to_vec()).unwrap_or_default();
         let str_from_url = match std::str::from_utf8(&url) {
             Ok(s) => s,
             Err(e) => return Err(Error::BadUrl(e.to_string())),
@@ -79,7 +79,7 @@ impl BaseShortener for Shortener {
     }
 
     async fn short(&self, url: &str) -> Result<Url> {
-        let url = self.clean_url(url.as_bytes().to_vec()).unwrap_or(vec![]);
+        let url = self.clean_url(url.as_bytes().to_vec()).unwrap_or_default();
         let str_from_utf8 = match std::str::from_utf8(&url) {
             Ok(s) => s,
             Err(e) => return Err(Error::BadUrl(e.to_string())),
