@@ -1,6 +1,3 @@
-// use std::collections::BTreeMap;
-// use std::str::FromStr;
-// use std::collections::HashMap;
 use async_trait::async_trait;
 use url::Url;
 
@@ -13,7 +10,6 @@ pub trait BaseShortener {
         match reqwest::get(url).await {
             Ok(r) => Ok(r),
             Err(e) => {
-                println!("{}", e);
                 Err(Error::ResponseError(e.to_string()))
             }
         }
@@ -24,7 +20,6 @@ pub trait BaseShortener {
         match client.post(url).body(data).send().await {
             Ok(_) => Ok(()),
             Err(e) => {
-                println!("{}", e);
                 Err(Error::ResponseError(e.to_string()))
             }
         }
@@ -38,6 +33,8 @@ pub trait BaseShortener {
         }
     }
 
+    async fn short(&self, url: &str) -> Result<Url>;
+
     fn clean_url(&self, url: Vec<u8>) -> Result<Vec<u8>> {
         let str_from_url = match std::str::from_utf8(&url) {
             Ok(s) => s,
@@ -45,15 +42,18 @@ pub trait BaseShortener {
         };
         let new_url: Vec<u8>;
         if !url.starts_with(b"http://") && !url.starts_with(b"https://") {
-            new_url = ("http://".to_string() + str_from_url).as_bytes().to_vec();
+            new_url = ("https://".to_string() + str_from_url).as_bytes().to_vec();
         } else {
             new_url = str_from_url.as_bytes().to_vec();
         }
-        let new_url = match Url::parse(std::str::from_utf8(&new_url).unwrap()) {
+        let new_url_from_utf8 = match std::str::from_utf8(&new_url) {
+            Ok(s) => s,
+            Err(e) => return Err(Error::BadUrl(e.to_string())),
+        };
+        let new_url = match Url::parse(new_url_from_utf8) {
             Ok(_) => new_url,
             Err(e) => return Err(Error::BadUrl(e.to_string())),
         };
-
         Ok(new_url)
     }
 }
@@ -64,16 +64,11 @@ mod tests {
         base::BaseShortener,
         bitly::{self},
     };
-    use std::collections::BTreeMap;
-
     #[tokio::test(flavor = "multi_thread")]
-    async fn test_expand() {
-        let b = bitly::Shortener {
-            timeout: 2,
-            verify: true,
-            proxies: BTreeMap::new(),
-        };
-        let url = b.expand("https://bit.ly/TEST").await.unwrap();
-        assert_eq!(url.as_str(), "https://www.autosouk.com/News/templates/CarReviewPricePhotoArticlesDubai.Aspx?articleid=50&zoneid=3");
+    async fn test_clean_url() {
+        let b = bitly::Shortener::default();
+
+        let clean_url = b.clean_url("google.com".as_bytes().to_vec()).unwrap();
+        assert_eq!(std::str::from_utf8(&clean_url).unwrap(), "https://google.com");
     }
 }
