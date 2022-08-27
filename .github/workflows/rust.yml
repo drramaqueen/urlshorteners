@@ -26,6 +26,7 @@ jobs:
     name: Test Suite
     runs-on: ubuntu-latest
     environment: env
+      BITLY_TOKEN: ${{ secrets.BITLY_TOKEN }}
     strategy:
       matrix:
         rust:

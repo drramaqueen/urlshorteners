@@ -57,7 +57,6 @@ impl BaseShortener for Shortener {
         map.insert("long_url", str_from_url);
 
         let client = reqwest::Client::new();
-        println!("BITLY_TOKEN {}", self.api_key);
         let response = client
             .post(shorten_url)
             .header(AUTHORIZATION, "Bearer ".to_string() + &self.api_key)
