@@ -9,9 +9,7 @@ pub trait BaseShortener {
     async fn get(&self, url: &str) -> Result<reqwest::Response> {
         match reqwest::get(url).await {
             Ok(r) => Ok(r),
-            Err(e) => {
-                Err(Error::ResponseError(e.to_string()))
-            }
+            Err(e) => Err(Error::ResponseError(e.to_string())),
         }
     }
 
@@ -19,9 +17,7 @@ pub trait BaseShortener {
         let client = reqwest::Client::new();
         match client.post(url).body(data).send().await {
             Ok(_) => Ok(()),
-            Err(e) => {
-                Err(Error::ResponseError(e.to_string()))
-            }
+            Err(e) => Err(Error::ResponseError(e.to_string())),
         }
     }
 
@@ -69,6 +65,9 @@ mod tests {
         let b = bitly::Shortener::default();
 
         let clean_url = b.clean_url("google.com".as_bytes().to_vec()).unwrap();
-        assert_eq!(std::str::from_utf8(&clean_url).unwrap(), "https://google.com");
+        assert_eq!(
+            std::str::from_utf8(&clean_url).unwrap(),
+            "https://google.com"
+        );
     }
 }

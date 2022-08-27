@@ -6,9 +6,8 @@ use reqwest::header::AUTHORIZATION;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::collections::HashMap;
-use url::Url;
 use std::env;
-
+use url::Url;
 
 pub struct Shortener {
     pub timeout: u32,
@@ -41,7 +40,6 @@ struct Shorten {
     tags: Vec<String>,
     deeplinks: Vec<String>,
     references: HashMap<String, String>,
-
 }
 
 #[async_trait]
@@ -57,7 +55,7 @@ impl BaseShortener for Shortener {
         let _bitlink_id_header = reqwest::header::HeaderName::from_static("bitlink_id");
 
         let mut map = HashMap::new();
-        map.insert("long_url", str_from_url);   
+        map.insert("long_url", str_from_url);
 
         let client = reqwest::Client::new();
         let response = client
@@ -67,16 +65,14 @@ impl BaseShortener for Shortener {
             .send()
             .await;
         match response {
-            Ok(r) => {
-                match r.json::<Shorten>().await {
-                    Ok(shorten) => {
-                        match Url::parse(shorten.link.as_str()) {
-                            Ok(s) => return Ok(s),
-                            Err(e) => return Err(Error::BadUrl(e.to_string()))
-                        };
-                    }
-                    Err(e) => Err(Error::ResponseError(e.to_string()))
+            Ok(r) => match r.json::<Shorten>().await {
+                Ok(shorten) => {
+                    match Url::parse(shorten.link.as_str()) {
+                        Ok(s) => return Ok(s),
+                        Err(e) => return Err(Error::BadUrl(e.to_string())),
+                    };
                 }
+                Err(e) => Err(Error::ResponseError(e.to_string())),
             },
             Err(e) => Err(Error::ExpandError(e.to_string())),
         }
@@ -119,5 +115,4 @@ mod tests {
         let bitly = bitly.expand(HTTPS_EXPANDED).await.unwrap();
         assert_eq!(bitly.as_str(), SHORTEN);
     }
-
 }
