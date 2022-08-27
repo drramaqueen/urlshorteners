@@ -1,9 +1,10 @@
 on: [push, pull_request]
 
 name: CI
-environment: env
 
 jobs:
+  env:
+      BITLY_TOKEN: ${{ secrets.BITLY_TOKEN }}
   check:
     name: Check
     runs-on: ubuntu-latest
