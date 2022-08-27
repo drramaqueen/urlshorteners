@@ -31,7 +31,6 @@ impl Default for Shortener {
 
 #[derive(Serialize, Debug, Deserialize)]
 struct Shorten {
-    created_at: String,
     id: String,
     link: String,
     custom_bitlinks: Vec<String>,
