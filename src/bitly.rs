@@ -30,7 +30,7 @@ impl Default for Shortener {
 }
 
 #[derive(Serialize, Debug, Deserialize)]
-struct Shorten {
+struct Short {
     created_at: String,
     id: String,
     link: String,
@@ -42,9 +42,17 @@ struct Shorten {
     references: HashMap<String, String>,
 }
 
+#[derive(Serialize, Debug, Deserialize)]
+struct Expand {
+    link: String,
+    id: String,
+    long_url: String,
+    created_at: String,
+}
+
 #[async_trait]
 impl BaseShortener for Shortener {
-    async fn expand(&self, url: &str) -> Result<Url> {
+    async fn shorten(&self, url: &str) -> Result<Url> {
         let url = self.clean_url(url.as_bytes().to_vec()).unwrap_or_default();
         let str_from_url = match std::str::from_utf8(&url) {
             Ok(s) => s,
@@ -52,8 +60,6 @@ impl BaseShortener for Shortener {
         };
 
         let shorten_url = self._api_url.to_string() + "/shorten";
-        let _bitlink_id_header = reqwest::header::HeaderName::from_static("bitlink_id");
-
         let mut map = HashMap::new();
         map.insert("long_url", str_from_url);
 
@@ -65,7 +71,7 @@ impl BaseShortener for Shortener {
             .send()
             .await;
         match response {
-            Ok(r) => match r.json::<Shorten>().await {
+            Ok(r) => match r.json::<Short>().await {
                 Ok(shorten) => {
                     match Url::parse(shorten.link.as_str()) {
                         Ok(s) => return Ok(s),
@@ -74,20 +80,39 @@ impl BaseShortener for Shortener {
                 }
                 Err(e) => Err(Error::ResponseError(e.to_string())),
             },
-            Err(e) => Err(Error::ExpandError(e.to_string())),
+            Err(e) => Err(Error::ShortenError(e.to_string())),
         }
     }
 
-    async fn short(&self, url: &str) -> Result<Url> {
-        let url = self.clean_url(url.as_bytes().to_vec()).unwrap_or_default();
-        let str_from_utf8 = match std::str::from_utf8(&url) {
+    async fn expand(&self, url: &str) -> Result<Url> {
+        let str_from_url = match std::str::from_utf8(url.as_bytes()) {
             Ok(s) => s,
             Err(e) => return Err(Error::BadUrl(e.to_string())),
         };
-        let response = self.get(str_from_utf8).await;
+
+        let expand_url = self._api_url.to_string() + "/expand";
+
+        let mut map = HashMap::new();
+        map.insert("bitlink_id", str_from_url);
+
+        let client = reqwest::Client::new();
+        let response = client
+            .post(expand_url)
+            .header(AUTHORIZATION, "Bearer ".to_string() + &self.api_key)
+            .json(&map)
+            .send()
+            .await;
         match response {
-            Ok(r) => Ok(r.url().to_owned()),
-            Err(e) => Err(Error::ExpandError(e.to_string())),
+            Ok(r) => match r.json::<Expand>().await {
+                Ok(expaned) => {
+                    match Url::parse(expaned.long_url.as_str()) {
+                        Ok(s) => return Ok(s),
+                        Err(e) => return Err(Error::BadUrl(e.to_string())),
+                    };
+                }
+                Err(e) => Err(Error::ResponseError(e.to_string())),
+            },
+            Err(e) => Err(Error::ShortenError(e.to_string())),
         }
     }
 }
@@ -98,21 +123,29 @@ mod tests {
 
     use super::Shortener;
 
-    const SHORTEN: &str = "https://bit.ly/3e43fWI";
+    const HTTPS_SHORTEN: &str = "https://bit.ly/3e43fWI";
+    const SHORTEN: &str = "bit.ly/3e43fWI";
     const HTTPS_EXPANDED: &str = "https://www.google.com/";
     const EXPANDED: &str = "www.google.com/";
 
     #[tokio::test(flavor = "multi_thread")]
-    async fn test_bitly_expand_without_scheme() {
+    async fn test_bitly_shorten_without_scheme() {
         let bitly: Shortener = Default::default();
-        let bitly = bitly.expand(EXPANDED).await.unwrap();
-        assert_eq!(bitly.as_str(), SHORTEN);
+        let bitly = bitly.shorten(EXPANDED).await.unwrap();
+        assert_eq!(bitly.as_str(), HTTPS_SHORTEN);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_bitly_shorten() {
+        let bitly: Shortener = Default::default();
+        let bitly = bitly.shorten(HTTPS_EXPANDED).await.unwrap();
+        assert_eq!(bitly.as_str(), HTTPS_SHORTEN);
     }
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_bitly_expand() {
         let bitly: Shortener = Default::default();
-        let bitly = bitly.expand(HTTPS_EXPANDED).await.unwrap();
-        assert_eq!(bitly.as_str(), SHORTEN);
+        let expanded = bitly.expand(SHORTEN).await.unwrap();
+        assert_eq!(expanded.as_str(), HTTPS_EXPANDED);
     }
 }

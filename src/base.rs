@@ -21,15 +21,20 @@ pub trait BaseShortener {
         }
     }
 
+    async fn shorten(&self, url: &str) -> Result<Url>;
+
     async fn expand(&self, url: &str) -> Result<Url> {
-        let response = self.get(url).await;
+        let url = self.clean_url(url.as_bytes().to_vec()).unwrap_or_default();
+        let str_from_url = match std::str::from_utf8(&url) {
+            Ok(s) => s,
+            Err(e) => return Err(Error::BadUrl(e.to_string())),
+        };
+        let response = self.get(str_from_url).await;
         match response {
             Ok(r) => Ok(r.url().to_owned()),
             Err(e) => Err(Error::ExpandError(e.to_string())),
         }
     }
-
-    async fn short(&self, url: &str) -> Result<Url>;
 
     fn clean_url(&self, url: Vec<u8>) -> Result<Vec<u8>> {
         let str_from_url = match std::str::from_utf8(&url) {
@@ -55,6 +60,7 @@ pub trait BaseShortener {
 
 #[cfg(test)]
 mod tests {
+
     use crate::{
         base::BaseShortener,
         bitly::{self},
