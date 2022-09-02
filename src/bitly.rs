@@ -29,7 +29,7 @@ impl Default for Shortener {
     }
 }
 
-#[derive(Serialize, Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 struct Short {
     created_at: String,
     id: String,
@@ -42,7 +42,7 @@ struct Short {
     references: HashMap<String, String>,
 }
 
-#[derive(Serialize, Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 struct Expand {
     link: String,
     id: String,
@@ -104,8 +104,8 @@ impl BaseShortener for Shortener {
             .await;
         match response {
             Ok(r) => match r.json::<Expand>().await {
-                Ok(expaned) => {
-                    match Url::parse(expaned.long_url.as_str()) {
+                Ok(expanded) => {
+                    match Url::parse(expanded.long_url.as_str()) {
                         Ok(s) => return Ok(s),
                         Err(e) => return Err(Error::BadUrl(e.to_string())),
                     };
@@ -117,11 +117,60 @@ impl BaseShortener for Shortener {
     }
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Clicks {
+    link_clicks: Vec<LinkClicks>,
+    units: i32,
+    unit: String,
+    unit_reference: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct LinkClicks {
+    clicks: u32,
+    date: String,
+}
+
+impl Shortener {
+    async fn link_clicks(&self, url: &str) -> Result<Vec<LinkClicks>> {
+        let clicks_url = self._api_url.to_string() + "/bitlinks/" + url + "/clicks";
+        let client = reqwest::Client::new();
+        let response = client
+            .get(clicks_url)
+            .header(AUTHORIZATION, "Bearer ".to_string() + &self.api_key)
+            .send()
+            .await;
+
+        match response {
+            Ok(r) => match r.json::<Clicks>().await {
+                Ok(clicks) => {
+                    println!("OK {:?}", clicks);
+                    Ok(clicks.link_clicks)
+                }
+                Err(e) => Err(Error::ResponseError(e.to_string())),
+            },
+            Err(e) => Err(Error::ResponseError(e.to_string())),
+        }
+    }
+
+    async fn link_clicks_total_count(&self, url: &str) -> Result<u32> {
+        let mut res = 0;
+        let clicks = self.link_clicks(url).await;
+        match clicks {
+            Ok(info) => {
+                for i in info {
+                    res += i.clicks;
+                }
+                Ok(res)
+            }
+            Err(e) => Err(Error::ResponseError(e.to_string())),
+        }
+    }
+}
 #[cfg(test)]
 mod tests {
-    use crate::base::BaseShortener;
-
     use super::Shortener;
+    use crate::base::BaseShortener;
 
     const HTTPS_SHORTEN: &str = "https://bit.ly/3e43fWI";
     const SHORTEN: &str = "bit.ly/3e43fWI";
@@ -147,5 +196,19 @@ mod tests {
         let bitly: Shortener = Default::default();
         let expanded = bitly.expand(SHORTEN).await.unwrap();
         assert_eq!(expanded.as_str(), HTTPS_EXPANDED);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_bitly_clicks() {
+        let bitly: Shortener = Default::default();
+        let clicks = bitly.link_clicks(SHORTEN).await;
+        assert!(clicks.unwrap().len() > 0);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_bitly_clicks_total_count() {
+        let bitly: Shortener = Default::default();
+        let clicks = bitly.link_clicks_total_count(SHORTEN).await;
+        assert!(clicks.unwrap() > 0);
     }
 }
