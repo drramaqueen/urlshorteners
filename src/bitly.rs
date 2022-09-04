@@ -132,6 +132,7 @@ pub struct LinkClicks {
 }
 
 impl Shortener {
+    #[allow(dead_code)]
     async fn link_clicks(&self, url: &str) -> Result<Vec<LinkClicks>> {
         let clicks_url = self._api_url.to_string() + "/bitlinks/" + url + "/clicks";
         let client = reqwest::Client::new();
@@ -153,6 +154,7 @@ impl Shortener {
         }
     }
 
+    #[allow(dead_code)]
     async fn link_clicks_total_count(&self, url: &str) -> Result<u32> {
         let mut res = 0;
         let clicks = self.link_clicks(url).await;
