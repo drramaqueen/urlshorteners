@@ -4,7 +4,6 @@ use crate::error::Result;
 use async_trait::async_trait;
 use reqwest::header::AUTHORIZATION;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::env;
 use url::Url;
