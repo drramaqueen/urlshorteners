@@ -12,7 +12,6 @@ use url::Url;
 pub struct Shortener {
     pub timeout: u32,
     pub verify: bool,
-    pub proxies: BTreeMap<String, String>,
     _api_url: String,
     pub api_key: String,
 }
@@ -23,7 +22,6 @@ impl Default for Shortener {
             timeout: 2,
             _api_url: String::from("https://api-ssl.bit.ly/v4"),
             verify: true,
-            proxies: BTreeMap::new(),
             api_key: env::var("BITLY_TOKEN").expect("env var BITLY_TOKEN is not set"),
         }
     }
